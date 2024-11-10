@@ -128,9 +128,18 @@
     <script>
         function getCurrentLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition);
+                Swal.fire({
+                    title: 'Please Wait',
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                });
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
             } else {
-                alert("Geolocation is not supported by this browser.");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Geolocation is not supported by this browser.',
+                });
             }
         }
 
@@ -144,9 +153,23 @@
                 .then(data => {
                     const city = data[0].name;
                     document.querySelector('input[name="city"]').value = city;
+                    Swal.close();
                 })
-                .catch(error => console.error('Error:', error)
-            );
+                .catch(error => {
+                    console.error(error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to fetch location',
+                        text: 'Please try again.',
+                    });
+                });
+        }
+        function showError(error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Location access denied',
+                text: 'Please enable location services and try again.',
+            });
         }
     </script>
 </body>
