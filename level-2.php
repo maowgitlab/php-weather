@@ -1,10 +1,17 @@
 <?php
-$apiKey = "API";
-$city = isset($_GET['city']) ? $_GET['city'] : "Banjarmasin";
-$endpoint = "http://api.openweathermap.org/data/2.5/weather?q={$city}&appid={$apiKey}&units=metric";
+    $apiKey = "API_KEY";
+    $city = isset($_GET['city']) ? $_GET['city'] : "";
+    $weatherArray = [];
+    if ($city) {
+        $endpoint = "http://api.openweathermap.org/data/2.5/weather?q={$city}&appid={$apiKey}&units=metric";
 
-$weatherData = file_get_contents($endpoint);
-$weatherArray = json_decode($weatherData, true);
+        $weatherData = @file_get_contents($endpoint);
+        if ($weatherData === false) {
+            $weatherArray['cod'] = 404;
+        } else {
+            $weatherArray = json_decode($weatherData, true);
+        }
+    }
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,6 +20,7 @@ $weatherArray = json_decode($weatherData, true);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather APP</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -91,6 +99,8 @@ $weatherArray = json_decode($weatherData, true);
         <form action="" method="get">
             <input type="text" name="city" placeholder="Enter city name" value="<?= $city ?? ""; ?>" required>
             <button type="submit">Get Weather</button>
+            <button type="button" onclick="getCurrentLocation()">By Your Location</button>
+            <button type="button" onclick="window.location.href='level-2.php'">reset</button>
         </form>
         <?php if (isset($weatherArray['cod']) && $weatherArray['cod'] == 200) :
             $temperature = $weatherArray['main']['temp'];
@@ -102,10 +112,43 @@ $weatherArray = json_decode($weatherData, true);
                 <p>Weather Description: <?= $weatherDescription; ?></p>
                 <p>Humidity: <?= $humidity; ?>%</p>
             </div>
+        <?php elseif (isset($weatherArray['cod']) && $weatherArray['cod'] == 404) : ?>
+            <script> 
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Your Location Not Listed in API', 
+                    text: 'Please use another location' 
+                }); 
+            </script>
         <?php else : ?>
-            <p>Error: <?= $weatherArray['message']; ?></p>
+            <p>Result here</p>
         <?php endif; ?>
     </div>
+
+    <script>
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function showPosition(position) {   
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const apiKey = "API_KEY";
+            const endpoint = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${apiKey}`;
+            fetch(endpoint)
+                .then(response => response.json())
+                .then(data => {
+                    const city = data[0].name;
+                    document.querySelector('input[name="city"]').value = city;
+                })
+                .catch(error => console.error('Error:', error)
+            );
+        }
+    </script>
 </body>
 
 </html>
