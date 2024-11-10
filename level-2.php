@@ -152,8 +152,14 @@
                 .then(response => response.json())
                 .then(data => {
                     const city = data[0].name;
-                    document.querySelector('input[name="city"]').value = city;
                     Swal.close();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Location Found',
+                        text: `Your current location is: ${city} and will be set automatically`,
+                    }).then(() => {
+                        document.querySelector('input[name="city"]').value = city;
+                    });
                 })
                 .catch(error => {
                     console.error(error);
